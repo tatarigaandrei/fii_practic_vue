@@ -5,7 +5,7 @@
     <form>
       <div class="mb-3">
         <label for="video_id" class="form-label">Video id</label>
-        <input required type="text" name="video_id" class="form-control" v-model="song.videoId" id="video_id">
+        <input required type="text" name="video_id" class="form-control" v-model="song.video_id" id="video_id">
       </div>
       <div class="mb-3">
         <label for="start" class="form-label">Start</label>
@@ -36,7 +36,7 @@ export default {
   data() {
     return {
       song: {
-        videoId: null,
+        video_id: null,
         start:null,
         end: null
       },
@@ -55,10 +55,9 @@ export default {
       this.gameStore.setLoading(true)
       try{
         let response = await getSong(this.id)
-        this.song.videoId = response.data.video_id
+        this.song.video_id = response.data.video_id
         this.song.start = response.data.start
         this.song.end = response.data.end
-        setTimeout( () => this.$router.push({ path: '/admin/song'}), 5000);
       } catch (e) {
         console.log(e);
       } finally {
@@ -68,14 +67,10 @@ export default {
     async updateSong() {
       this.gameStore.setLoading(true)
       try{
-        const data = {
-          video_id: this.song.videoId,
-          start: this.song.start,
-          end: this.song.end,
-        }
-        let response = await updateSong(this.id, data)
-
+        let response = await updateSong(this.id, this.song)
         this.song = response.data
+        this.$router.push({ path: '/admin/song'});
+        this.toast("Success!");
       } catch (e) {
         console.log(e);
       } finally {

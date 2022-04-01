@@ -4,7 +4,7 @@
       <div class="row text-center">
         <div class="col-lg-12 col-md-12 col-sm-12">
           <div class="title-wrapper p-5">
-            <h1>Ghiceste melodia</h1>
+            <h1>Guess the song</h1>
           </div>
           <div v-if="!gameStore.level" class="button-wrapper">
             <button @click="start" type="button" class="btn btn-primary">Start</button>
@@ -12,8 +12,9 @@
           <div class="current-question-wrapper">
             <div class="progress-wrapper" v-if="questions && this.gameStore.level">
               <i
-                 class="bi bi-circle p2"
-                 :data-id="item.id"
+                  :key="index"
+                  class="bi bi-circle p2"
+                  :data-progress-id="item.id"
                   v-for="(item, index) in questions"></i>
             </div>
             <div class="player-wrapper">
@@ -26,7 +27,7 @@
                 <a
                     v-for="(item, index) in gameStore.currentSong.answers"
                     :key="index"
-                    :data-id="item.id"
+                    :data-answer-id="item.id"
                     @click="verifyAnswer(item)"
                     class="answer"
                 >
@@ -63,6 +64,7 @@ export default {
     }
   },
   mounted() {
+    this.gameStore.setCurrentSong(null)
     this.setQuestions()
   },
   methods: {
@@ -87,11 +89,11 @@ export default {
     hasNextQuestion() {
       return this.questions[this.gameStore.getCurrentSongIndex + 1] !== undefined
     },
-    nextLevel(){
+    nextLevel() {
       this.gameStore.setLevel(this.gameStore.level + 1)
       this.resetAnswerClass()
       this.updateCurrentSong()
-      if(this.gameStore.currentSong) {
+      if (this.gameStore.currentSong) {
         this.playerStore.globalPlayer.loadVideoById({
           videoId: this.gameStore.currentSong.video_id,
           startSeconds: this.gameStore.currentSong.start,
@@ -102,13 +104,14 @@ export default {
     },
     async verifyAnswer(answer) {
       this.gameStore.setLoading(true)
-      try{
-        if (this.result[this.gameStore.getCurrentSongIndex] === undefined) {
-          let response = await checkQuestion(this.gameStore.currentSong.id, answer.id)
-          this.result[this.gameStore.getCurrentSongIndex] = (response.data)
-          this.updateAnswerClass(answer, response.data)
-          this.updateProgressClass(response.data)
-        }
+      try {
+        // if (this.result[this.gameStore.getCurrentSongIndex] === undefined) {
+        let response = await checkQuestion(this.gameStore.currentSong.id, answer.id)
+        this.updateProgressClass(response.data)
+        this.updateAnswerClass(answer, response.data)
+
+        this.result[this.gameStore.getCurrentSongIndex] = (response.data)
+        // }
       } catch (e) {
         console.log(e);
       } finally {
@@ -121,24 +124,33 @@ export default {
       }
     },
     resetAnswerClass() {
-      Array.from(document.querySelectorAll('.answer')).forEach(function(el) {
+      Array.from(document.querySelectorAll('.answer')).forEach(function (el) {
         el.classList.remove('success');
         el.classList.remove('error');
       });
     },
     updateAnswerClass(answer, status) {
-      const currentAnswerElement = document.querySelector(`[data-id="${answer.id}"]`)
-      if(currentAnswerElement){
-        currentAnswerElement.classList.add(status ? 'success' : 'error');
+      const currentAnswerElement = document.querySelector(`[data-answer-id="${answer.id}"]`)
+      if (currentAnswerElement) {
+        console.log('current-answer-element-found');
+        if (status) {
+          currentAnswerElement.classList.add('success');
+        } else {
+          currentAnswerElement.classList.add('error');
+        }
       }
     },
     updateProgressClass(status) {
       const currentSongId = this.gameStore.currentSong.id;
-      const currentProgressElement = document.querySelector(`[data-id="${currentSongId}"]`)
-      if(currentProgressElement) {
+      let currentProgressElement = document.querySelector(`[data-progress-id="${currentSongId}"]`)
+      if (currentProgressElement) {
         currentProgressElement.classList.remove('bi-circle');
         currentProgressElement.classList.add('bi-circle-fill');
-        currentProgressElement.classList.add(status ? 'success' : 'error');
+        if (status) {
+          currentProgressElement.classList.add('success')
+        } else {
+          currentProgressElement.classList.add('error')
+        }
       }
     },
   },
@@ -150,7 +162,7 @@ export default {
   display: none
 }
 
-div.container.custom-container{
+div.container.custom-container {
   max-width: 640px;
   height: 100vh;
 }
@@ -165,7 +177,7 @@ div.container.custom-container{
   border-color: green;
 }
 
-.answer{
+.answer {
   display: block;
   margin: 20px;
   border: 2px solid black;

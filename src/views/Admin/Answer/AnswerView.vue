@@ -7,7 +7,7 @@
       <template v-for="(answer,index) in answers" :key="index">
         <div class="mb-3 answer-group">
           <div class="answer-item">
-            <label :for="'answer' + index" class="form-label">Answer1</label>
+            <label :for="'answer' + index" class="form-label">Answer {{index + 1}}</label>
             <input required type="text" class="form-control" v-model="answer.text" :id="'answer' + index">
           </div>
           <div class="answer-group">
@@ -107,7 +107,7 @@ export default {
         })
         await createAnswers(this.answers)
         this.toast("Success!");
-        setTimeout(() => this.$router.push({path: '/admin/song'}), 2000);
+        this.$router.push({path: '/admin/song'})
       } catch (e) {
         console.log(e);
       } finally {
@@ -122,13 +122,12 @@ export default {
           let id = item.id
           delete item.id;
           promises.push(updateAnswer(id, item))
-          setTimeout(() => this.$router.push({path: '/admin/song'}), 2000);
-
         })
         Promise.allSettled(promises)
         .then((responses) => {
-          console.log(response);
-          this.toast("Success!");
+          this.toast("Updated!");
+          this.$router.push({path: '/admin/song'})
+
         })
         .finally(() => {
           this.gameStore.setLoading(false)

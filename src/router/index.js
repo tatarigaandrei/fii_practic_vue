@@ -5,10 +5,16 @@ import CreateSongView from "../views/Admin/Song/CreateSongView.vue";
 import UpdateSongView from "../views/Admin/Song/UpdateSongView.vue";
 import PageNotFound from "../components/PageNotFound/PageNotFound.vue";
 import AnswerView from "../views/Admin/Answer/AnswerView.vue";
+import LoginView from "../views/Admin/LoginView.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
+        {
+            path: '/login',
+            name: 'login',
+            component: LoginView
+        },
         {
             path: '/',
             name: 'game',
@@ -39,11 +45,11 @@ const router = createRouter({
             component: PageNotFound,
             hidden: true
         },
-        // {
-        //     path: '/:catchAll(.*)',
-        //     redirect: '/404',
-        //     hidden: true
-        // }
+        {
+            path: '/:catchAll(.*)',
+            redirect: '/404',
+            hidden: true
+        }
     ]
 })
 

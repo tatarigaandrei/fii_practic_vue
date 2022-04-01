@@ -16,6 +16,7 @@ import {toRefs} from "vue";
 export default {
   name: "AudioPlayer",
   components: {Spinner},
+  emits: ["next"],
   setup(){
     const playerStore = usePlayerStore();
     const gameStore = useGameStore();

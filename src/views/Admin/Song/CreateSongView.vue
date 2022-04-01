@@ -22,8 +22,7 @@
 <script>
 import Header from "../../../components/Header/Header.vue";
 import {useGameStore} from "../../../stores/game";
-import {getQuestions} from "../../../api/questionsEndpoints";
-import {createSong, getSongs} from "../../../api/admin/song";
+import {createSong} from "../../../api/admin/song";
 import { useToast } from "vue-toastification";
 export default {
   components: {Header},
@@ -59,7 +58,7 @@ export default {
         this.song.start = response.data.start
         this.song.end = response.data.end
         this.toast("Success!");
-        setTimeout( () => this.$router.push({ path: '/admin/song'}), 5000);
+        this.$router.push({ path: '/admin/song'});
       } catch (e) {
         console.log(e);
       } finally {
