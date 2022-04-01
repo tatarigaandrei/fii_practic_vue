@@ -2,14 +2,14 @@ import request from "../request/request";
 
 export function getQuestions() {
     return request({
-        url:'/',
+        url:'/game/songs',
         method:'get'
     })
 }
 
 export function checkQuestion(questionId, answerId) {
     return request({
-        url:`/${questionId}/${answerId}/check`,
+        url:`game/verify/${questionId}/${answerId}`,
         method:'get'
     })
 }

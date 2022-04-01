@@ -1,9 +1,9 @@
 <template>
   <main>
-    <div class="container custom-container">
+    <div class="container">
       <div class="row text-center">
         <div class="col-lg-12 col-md-12 col-sm-12">
-          <div class="title-wrapper p-5">
+          <div class="title-wrapper">
             <h1>Ghiceste melodia</h1>
           </div>
           <div v-if="!gameStore.level" class="button-wrapper">
@@ -12,7 +12,7 @@
           <div class="current-question-wrapper">
             <div class="progress-wrapper" v-if="questions && this.gameStore.level">
               <i
-                  :class="[progressClass(index) ]"
+                  :class="[progressClass(index)]"
                   v-for="(item, index) in questions"></i>
             </div>
             <div class="player-wrapper">
@@ -24,7 +24,7 @@
               ></audio-player>
             </div>
             <div class="answers-wrapper" v-if="gameStore.currentQuestion">
-              <div class="">
+              <div class="list-group">
                 <a
                     v-for="(item, index) in gameStore.currentQuestion.answers"
                     :key="index"
@@ -45,10 +45,10 @@
 <script>
 import {usePlayerStore} from "../stores/player.js";
 import HelloWorld from "../components/HelloWorld.vue";
-import {checkQuestion, getQuestions} from "../api/questionsEndpoints.js";
-import {useGameStore} from "../stores/game.js";
+import {checkQuestion, getQuestions} from "../api/questionsEndpoints";
+import {useGameStore} from "../stores/game";
 import AudioPlayer from "../components/Player/AudioPlayer.vue";
-import playerStateIcons from "../components/constants/player.js";
+import playerStateIcons from "../components/constants/player";
 
 export default {
   components: {AudioPlayer, HelloWorld},
@@ -95,6 +95,7 @@ export default {
       return this.questions[this.gameStore.getCurrentQuestionIndex + 1] !== undefined
     },
     nextLevel(){
+      console.log('next-level');
       this.gameStore.setLevel(this.gameStore.level + 1)
       this.updateCurrentQuestion()
       if(this.gameStore.currentQuestion) {
@@ -103,8 +104,6 @@ export default {
           startSeconds: this.gameStore.currentQuestion.start,
           endSeconds: this.gameStore.currentQuestion.end,
         })
-        this.playerStore.playerIcon = playerStateIcons.pause;
-
       }
     },
     async verifyAnswer(answer) {
@@ -130,7 +129,7 @@ export default {
     },
     answerClass(answer) {
       return {
-        'answer': true,
+        'answer list-group-item bt-1 mt-3': true,
         'active': this.currentAnswer && this.currentAnswer.id === answer.id && this.correctAnswer,
         'error': this.currentAnswer && this.currentAnswer.id === answer.id && !this.correctAnswer,
       }
@@ -139,48 +138,13 @@ export default {
       return {
         red: this.result.length > index && this.result[index] === false,
         green: this.result.length > index && this.result[index] === true,
-        "bi bi-circle-fill p2": this.result.length > index,
-        "bi bi-circle p2": this.result.length <= index,
+        "bi bi-circle-fill p-2": this.result.length > index,
+        "bi bi-circle p-2": this.result.length <= index,
       }
     }
   },
 }
 </script>
 <style>
-#youtube-audio {
-  cursor: pointer;
-  display: none
-}
 
-div.container.custom-container{
-  max-width: 640px;
-  height: 100vh;
-}
-
-.answer.error {
-  background-color: red;
-  border-color: red;
-}
-
-.answer{
-  display: block;
-  margin: 20px;
-  border: 2px solid black;
-  border-radius: 20px;
-  color: black;
-  text-decoration: none;
-  font-size: 18px;
-}
-
-i.bi {
-  margin: 10px;
-}
-
-i.bi.bi-circle-fill.red {
-  color: red;
-}
-
-i.bi.bi-circle-fill.green {
-  color: green;
-}
 </style>
