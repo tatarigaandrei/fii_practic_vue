@@ -4,7 +4,7 @@ export const useGameStore = defineStore({
     id: 'game',
     state: () => ({
         loading: true,
-        currentQuestion: null,
+        currentSong: null,
         level: null,
     }),
     getters: {
@@ -12,17 +12,17 @@ export const useGameStore = defineStore({
         getLoading() {
             return this.loading
         },
-        getCurrentQuestion() {
-            return this.playerIcon
+        getCurrentSong() {
+            return this.currentSong
         },
-        getCurrentQuestionIndex() {
+        getCurrentSongIndex() {
             return this.level > 0 ? this.level - 1 : 0;
         }
     },
     actions: {
-        setCurrentQuestion(currentQuestion) {
+        setCurrentSong(currentSong) {
             this.$patch((state) => {
-                state.currentQuestion = currentQuestion
+                state.currentSong = currentSong
             })
         },
         setLevel(level) {

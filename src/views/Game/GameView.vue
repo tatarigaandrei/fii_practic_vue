@@ -12,27 +12,25 @@
           <div class="current-question-wrapper">
             <div class="progress-wrapper" v-if="questions && this.gameStore.level">
               <i
-                  :class="[progressClass(index) ]"
+                 class="bi bi-circle p2"
+                 :data-id="item.id"
                   v-for="(item, index) in questions"></i>
             </div>
             <div class="player-wrapper">
-              <audio-player v-if="gameStore.currentQuestion"
-                            :video-id=" gameStore.currentQuestion.video_id"
-                            :start-seconds=" gameStore.currentQuestion.start"
-                            :end-seconds="gameStore.currentQuestion.end"
+              <audio-player v-if="gameStore.currentSong"
                             @next="nextLevel"
               ></audio-player>
             </div>
-            <div class="answers-wrapper" v-if="gameStore.currentQuestion">
+            <div class="answers-wrapper" v-if="gameStore.currentSong">
               <div class="">
                 <a
-                    v-for="(item, index) in gameStore.currentQuestion.answers"
+                    v-for="(item, index) in gameStore.currentSong.answers"
                     :key="index"
+                    :data-id="item.id"
                     @click="verifyAnswer(item)"
-                    :class="answerClass(item)"
-
+                    class="answer"
                 >
-                  {{ item.name }}</a>
+                  {{ item.text }}</a>
               </div>
             </div>
           </div>
@@ -43,12 +41,12 @@
   </main>
 </template>
 <script>
-import {usePlayerStore} from "../stores/player.js";
-import HelloWorld from "../components/HelloWorld.vue";
-import {checkQuestion, getQuestions} from "../api/questionsEndpoints.js";
-import {useGameStore} from "../stores/game.js";
-import AudioPlayer from "../components/Player/AudioPlayer.vue";
-import playerStateIcons from "../components/constants/player.js";
+import {usePlayerStore} from "../../stores/player.js";
+import HelloWorld from "../../components/HelloWorld.vue";
+import {checkQuestion, getQuestions} from "../../api/questionsEndpoints.js";
+import {useGameStore} from "../../stores/game.js";
+import AudioPlayer from "../../components/Player/AudioPlayer.vue";
+import playerStateIcons from "../../components/constants/player.js";
 
 export default {
   components: {AudioPlayer, HelloWorld},
@@ -61,17 +59,12 @@ export default {
   data() {
     return {
       questions: null,
-      currentAnswer: null,
-      correctAnswer: null,
       result: [],
     }
-  },
-  created() {
   },
   mounted() {
     this.setQuestions()
   },
-  computed: {},
   methods: {
     async setQuestions() {
       this.gameStore.setLoading(true)
@@ -86,35 +79,35 @@ export default {
     },
     start() {
       this.gameStore.setLevel(1)
-      this.updateCurrentQuestion()
+      this.updateCurrentSong()
     },
-    updateCurrentQuestion() {
-      this.gameStore.setCurrentQuestion(this.questions[this.gameStore.getCurrentQuestionIndex])
+    updateCurrentSong() {
+      this.gameStore.setCurrentSong(this.questions[this.gameStore.getCurrentSongIndex])
     },
     hasNextQuestion() {
-      return this.questions[this.gameStore.getCurrentQuestionIndex + 1] !== undefined
+      return this.questions[this.gameStore.getCurrentSongIndex + 1] !== undefined
     },
     nextLevel(){
       this.gameStore.setLevel(this.gameStore.level + 1)
-      this.updateCurrentQuestion()
-      if(this.gameStore.currentQuestion) {
+      this.resetAnswerClass()
+      this.updateCurrentSong()
+      if(this.gameStore.currentSong) {
         this.playerStore.globalPlayer.loadVideoById({
-          videoId: this.gameStore.currentQuestion.video_id,
-          startSeconds: this.gameStore.currentQuestion.start,
-          endSeconds: this.gameStore.currentQuestion.end,
+          videoId: this.gameStore.currentSong.video_id,
+          startSeconds: this.gameStore.currentSong.start,
+          endSeconds: this.gameStore.currentSong.end,
         })
         this.playerStore.playerIcon = playerStateIcons.pause;
-
       }
     },
     async verifyAnswer(answer) {
       this.gameStore.setLoading(true)
-      this.currentAnswer = answer
       try{
-        let response = await checkQuestion(this.gameStore.currentQuestion.id, answer.id)
-        this.correctAnswer = response.data ? answer : false
-        if (this.result[this.gameStore.getCurrentQuestionIndex] === undefined) {
-          this.result[this.gameStore.getCurrentQuestionIndex] = (response.data)
+        if (this.result[this.gameStore.getCurrentSongIndex] === undefined) {
+          let response = await checkQuestion(this.gameStore.currentSong.id, answer.id)
+          this.result[this.gameStore.getCurrentSongIndex] = (response.data)
+          this.updateAnswerClass(answer, response.data)
+          this.updateProgressClass(response.data)
         }
       } catch (e) {
         console.log(e);
@@ -123,26 +116,31 @@ export default {
       }
       if (this.hasNextQuestion()) {
         this.playerStore.playerIcon = playerStateIcons.next
-        // this.nextLevel()
       } else {
         this.playerStore.playerIcon = playerStateIcons.stop
       }
     },
-    answerClass(answer) {
-      return {
-        'answer': true,
-        'active': this.currentAnswer && this.currentAnswer.id === answer.id && this.correctAnswer,
-        'error': this.currentAnswer && this.currentAnswer.id === answer.id && !this.correctAnswer,
+    resetAnswerClass() {
+      Array.from(document.querySelectorAll('.answer')).forEach(function(el) {
+        el.classList.remove('success');
+        el.classList.remove('error');
+      });
+    },
+    updateAnswerClass(answer, status) {
+      const currentAnswerElement = document.querySelector(`[data-id="${answer.id}"]`)
+      if(currentAnswerElement){
+        currentAnswerElement.classList.add(status ? 'success' : 'error');
       }
     },
-    progressClass(index) {
-      return {
-        red: this.result.length > index && this.result[index] === false,
-        green: this.result.length > index && this.result[index] === true,
-        "bi bi-circle-fill p2": this.result.length > index,
-        "bi bi-circle p2": this.result.length <= index,
+    updateProgressClass(status) {
+      const currentSongId = this.gameStore.currentSong.id;
+      const currentProgressElement = document.querySelector(`[data-id="${currentSongId}"]`)
+      if(currentProgressElement) {
+        currentProgressElement.classList.remove('bi-circle');
+        currentProgressElement.classList.add('bi-circle-fill');
+        currentProgressElement.classList.add(status ? 'success' : 'error');
       }
-    }
+    },
   },
 }
 </script>
@@ -162,6 +160,11 @@ div.container.custom-container{
   border-color: red;
 }
 
+.answer.success {
+  background-color: green;
+  border-color: green;
+}
+
 .answer{
   display: block;
   margin: 20px;
@@ -176,11 +179,11 @@ i.bi {
   margin: 10px;
 }
 
-i.bi.bi-circle-fill.red {
+i.bi.bi-circle-fill.error {
   color: red;
 }
 
-i.bi.bi-circle-fill.green {
+i.bi.bi-circle-fill.success {
   color: green;
 }
 </style>

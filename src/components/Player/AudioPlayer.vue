@@ -5,7 +5,6 @@
     <i id="youtube-icon" :class="this.playerStore.playerIcon"/>
     <div id="youtube-player"></div>
   </div>
-  <div style="clear:both;margin:10px;text-align:center"></div>
 </template>
 <script >
 import Spinner from "../Spinner/Spinner.vue";
@@ -17,17 +16,6 @@ import {toRefs} from "vue";
 export default {
   name: "AudioPlayer",
   components: {Spinner},
-  props: {
-    videoId: {
-      type: String,
-    },
-    startSeconds: {
-      type: Number,
-    },
-    endSeconds: {
-      type: Number,
-    },
-  },
   setup(){
     const playerStore = usePlayerStore();
     const gameStore = useGameStore();
@@ -40,30 +28,21 @@ export default {
       ajaxScriptIsLoaded: false,
       youtubeApiScriptIsLoaded: false,
       playerIsReady: false,
+      donePlaying: false,
     }
   },
   mounted() {
     this.gameStore.setLoading(true)
-
-    let ajaxScript = document.createElement('script')
-    ajaxScript.setAttribute('src', 'https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js')
-    document.head.appendChild(ajaxScript)
-    ajaxScript.onload = () => {
-      console.log('here1');
-      this.ajaxScriptIsLoaded = true
-    }
-
     let youtubeApi = document.createElement('script')
     youtubeApi.setAttribute('src', 'https://www.youtube.com/s/player/3d7ef0b0/www-widgetapi.vflset/www-widgetapi.js')
     document.head.appendChild(youtubeApi)
     youtubeApi.onload = () => {
-      console.log('here2');
       this.youtubeApiScriptIsLoaded = true
     }
   },
   computed: {
     youtubeIsDefined() {
-      return this.ajaxScriptIsLoaded && this.youtubeApiScriptIsLoaded
+      return this.youtubeApiScriptIsLoaded
     }
   },
   watch: {
@@ -74,13 +53,6 @@ export default {
       }
     }
   },
-  created(){
-    console.log('created');
-  },
-  updated(){
-    console.log('updated');
-    console.log(this.gameStore.getPlayerIsReady);
-  },
   methods: {
     play() {
       this.playerStore.globalPlayer.playVideo();
@@ -90,17 +62,25 @@ export default {
       this.playerStore.globalPlayer.pauseVideo();
       this.playerStore.playerIcon = playerStateIcons.play;
     },
+    replay() {
+      this.playerStore.globalPlayer.loadVideoById({
+        videoId: this.gameStore.currentSong.video_id,
+        startSeconds: this.gameStore.currentSong.start,
+        endSeconds: this.gameStore.currentSong.end,
+      })
+      this.playerStore.playerIcon = playerStateIcons.pause;
+    },
     stop() {
       this.playerStore.globalPlayer.stopVideo();
       this.playerStore.playerIcon = playerStateIcons.hidden
-      this.gameStore.currentQuestion = null
+      this.gameStore.currentSong = null
     },
     next() {
       if (!this.playerStore.globalPlayer) {
         return
       }
       this.$emit('next', true)
-      if(!this.gameStore.currentQuestion) {
+      if(!this.gameStore.currentSong) {
         this.playerStore.playerIcon = this.playerStateIcons.stop
       }
 
@@ -116,12 +96,12 @@ export default {
       this.playerStore.globalPlayer = new YT.Player('youtube-player', {
         height: '0',
         width: '0',
-        videoId: this.videoId,
+        videoId: this.gameStore.currentSong.video_id,
         playerVars: {
           autoplay: 1,
           loop: 1,
-          start: this.startSeconds,
-          end: this.endSeconds,
+          start: this.gameStore.currentSong.start,
+          end: this.gameStore.currentSong.end,
         },
         events: {
           'onReady': this.onPlayerReady,
@@ -130,17 +110,19 @@ export default {
       });
     },
     onPlayerReady(event) {
-      console.log('onPlayerReady');
       event.target.playVideo();
-      this.playerStore.globalPlayer.setPlaybackQuality("small"); //highres, hd1080, hd720, large, medium, small
       document.getElementById("youtube-audio").style.display = "block";
       this.playerStore.playerIcon = playerStateIcons.pause
-      console.log(this.playerStore.playerIcon);
       this.playerIsReady = true
 
     },
     onPlayerStateChange(event) {
-      console.log('onPlayerStateChange');
+      if(event.data === 0 && !this.donePlaying) {
+        this.playerStore.playerIcon = playerStateIcons.replay
+        this.donePlaying = true
+      } else if (event.data === 1) {
+        this.donePlaying = false;
+      }
     },
     toggleAudio() {
       switch (this.playerStore.playerIcon) {
@@ -155,6 +137,9 @@ export default {
           break;
         case playerStateIcons.stop:
           this.stop()
+          break;
+        case playerStateIcons.replay:
+          this.replay()
           break;
         default:
           this.initPlayer()

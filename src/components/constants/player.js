@@ -4,6 +4,7 @@ const playerStateIcons = {// axios.defaults.headers.common['Access-Control-Allow
     pause: "bi bi-pause-circle",
     next: "bi bi-skip-forward-circle",
     stop: "bi bi-stop-circle",
+    replay: "bi bi-arrow-clockwise",
     hidden: "hidden"
 }
 export  default  playerStateIcons
