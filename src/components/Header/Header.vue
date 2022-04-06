@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#" @click.prevent="$router.push('/game')">
+      <a class="navbar-brand" href="#" @click.prevent="$router.push('/admin/song')">
         <img src="https://fiipractic.asii.ro/assets/images/fp-logo.svg" alt="">
       </a>
       <div class="navbar-nav">
